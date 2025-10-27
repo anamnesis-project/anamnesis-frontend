@@ -1,0 +1,78 @@
+/* Ficheiro: TelaBoasVindas.css */
+
+/*
+ * @doc
+ * Estilização para o componente TelaBoasVindas.
+ * Define o layout, cores e fontes.
+ */
+
+/* O 'container' principal que ocupa a tela inteira e centra o conteúdo */
+.container-boas-vindas {
+    display: flex; /* Usa o modelo Flexbox para alinhar... */
+    flex-direction: column; /* ...os itens em coluna (um em cima do outro) */
+    align-items: center; /* ...horizontalmente ao centro */
+    justify-content: center; /* ...verticalmente ao centro */
+    min-height: 100vh; /* Altura mínima de 100% da tela */
+    background-color: #fdfeff; /* Um fundo branco-azulado muito claro */
+    font-family: Arial, sans-serif; /* Uma fonte limpa e padrão */
+    text-align: center; /* Garante que todo o texto está centrado */
+    padding: 20px; /* Espaçamento interno para evitar que o conteúdo toque nas bordas */
+}
+
+/* Estilo para a imagem do logo */
+.logo {
+    width: 150px; /* Define uma largura fixa para o logo */
+    height: auto; /* Mantém a proporção da imagem */
+    margin-bottom: 24px; /* Espaço abaixo do logo */
+}
+
+/* Estilo para o Título Principal */
+.titulo {
+    /* Cor retirada da imagem (um azul-escuro/cinza) */
+    color: #3e5a8a;
+    font-size: 2.5rem; /* Tamanho de letra grande (40px) */
+    font-weight: bold;
+    margin: 10px 0; /* Espaçamento vertical */
+    max-width: 600px; /* Largura máxima para o título não ficar muito largo em telas grandes */
+}
+
+/* Estilo para o Subtítulo */
+.subtitulo {
+    /* Cor retirada da imagem (um azul-claro) */
+    color: #009cde;
+    font-size: 1.1rem; /* Tamanho de letra (18px) */
+    margin-bottom: 30px; /* Espaço maior abaixo dele, antes dos botões */
+}
+
+/* Container para alinhar os botões lado a lado */
+.container-botoes {
+    display: flex;
+    gap: 20px; /* Cria um espaço de 20px entre os botões */
+}
+
+/* Estilo base para AMBOS os botões */
+.btn {
+    padding: 12px 35px; /* Espaçamento interno (vertical e horizontal) */
+    font-size: 1rem; /* Tamanho da letra (16px) */
+    color: white; /* Cor do texto */
+    border: none; /* Sem borda */
+    border-radius: 8px; /* Cantos arredondados */
+    cursor: pointer; /* Muda o cursor para "mãozinha" */
+    font-weight: bold;
+    transition: background-color 0.3s; /* Efeito suave ao passar o rato */
+}
+
+/* Cor específica do botão Login (retirada da imagem) */
+.btn-login {
+    background-color: #5b7db1;
+}
+
+/* Cor específica do botão Register (retirada da imagem) */
+.btn-register {
+    background-color: #6b89b3;
+}
+
+/* Efeito ao passar o rato por cima dos botões */
+.btn:hover {
+    opacity: 0.9; /* Deixa o botão ligeiramente transparente */
+}
