@@ -1,28 +1,77 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { FiSearch } from 'react-icons/fi'
+import { useNavigate } from 'react-router-dom'
 import BackButton from "../components/buttonback"
+import { getApiUrl } from '../config/api'
 
 type Patient = {
+  id: number
   name: string
-  temperature: string
-  oxygenation: string
-  pressure: string
-  critical: boolean
+  cpf: string
+  dateOfBirth: string
+  sex: 'M' | 'F'
 }
-
-const mockPatients: Patient[] = [
-  { name: 'Patient 1', temperature: '37.5', oxygenation: '90%', pressure: '12,8', critical: false },
-  { name: 'Patient 2', temperature: '38.5', oxygenation: '80%', pressure: '12,8', critical: true },
-  { name: 'Patient 3', temperature: '37.5', oxygenation: '90%', pressure: '12,8', critical: false },
-  { name: 'Patient 4', temperature: '37.5', oxygenation: '90%', pressure: '9,2', critical: true },
-  { name: 'Patient 5', temperature: '37.5', oxygenation: '90%', pressure: '12,8', critical: false },
-  { name: 'Patient 6', temperature: '37.5', oxygenation: '90%', pressure: '12,8', critical: false },
-]
 
 export default function Patients() {
   const [search, setSearch] = useState('')
+  const [patients, setPatients] = useState<Patient[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const navigate = useNavigate()
 
-  const filtered = mockPatients.filter(p =>
+  useEffect(() => {
+    const fetchPatients = async () => {
+      setLoading(true)
+      setError(null)
+      
+      try {
+        const token = localStorage.getItem('token')
+        
+        if (!token) {
+          navigate('/login')
+          return
+        }
+
+        const response = await fetch(getApiUrl('/patients'), {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        })
+
+        if (response.status === 401) {
+          // Token inválido ou expirado
+          localStorage.removeItem('token')
+          localStorage.removeItem('employee')
+          navigate('/login')
+          return
+        }
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(errorData.message || `Error ${response.status}: Failed to fetch patients`)
+        }
+
+        const data = await response.json()
+        setPatients(data)
+      } catch (err: any) {
+        console.error('Fetch patients error:', err)
+        
+        if (err.message === 'Failed to fetch' || err.name === 'TypeError') {
+          setError('Cannot connect to server. Please check:\n1. Backend is running\n2. CORS/Proxy is configured')
+        } else {
+          setError(err.message || 'Failed to load patients')
+        }
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchPatients()
+  }, [navigate])
+
+  const filtered = patients.filter(p =>
     p.name.toLowerCase().includes(search.toLowerCase())
   )
 
@@ -38,7 +87,10 @@ export default function Patients() {
     </div>
 
 <div className="flex justify-end items-center mb-6">
-  <button className="bg-[#0077B1] text-white px-4 py-2 rounded-md hover:bg-[#0077B1] transition">
+  <button 
+    onClick={() => navigate('/authorize-employees')}
+    className="bg-[#0077B1] text-white px-4 py-2 rounded-md hover:bg-[#005a8c] transition"
+  >
     Authorize employee
   </button>
   <div className="bg-[#0077B1] text-white w-8 h-8 flex items-center justify-center rounded-full font-bold ml-2">
@@ -61,24 +113,34 @@ export default function Patients() {
   </div>
 </div>
 
-      {/* Patient list */}
+      {/* Loading / Error / Empty states */}
       <div className="space-y-4 max-w-4xl mx-auto">
-        {filtered.map((p, i) => (
+        {loading && <div className="text-center text-gray-600">Loading patients...</div>}
+        {error && (
+          <div className="text-center text-red-600 whitespace-pre-line bg-red-50 p-4 rounded-lg">
+            {error}
+          </div>
+        )}
+        {!loading && !error && filtered.length === 0 && (
+          <div className="text-center text-gray-600">
+            {patients.length === 0 ? 'No patients found' : 'No patients match your search'}
+          </div>
+        )}
+
+        {/* Patient list */}
+        {!loading && !error && filtered.map((patient) => (
           <div
-            key={i}
-            className="flex items-start bg-[#0077B1] text-white p-4 rounded-lg shadow-sm gap-3"
+            key={patient.id}
+            onClick={() => navigate(`/patients/${patient.id}/history`)}
+            className="flex items-start bg-[#0077B1] text-white p-4 rounded-lg shadow-sm gap-3 cursor-pointer hover:bg-[#005a8c] transition"
           >
-            <div
-              className={`w-3 h-3 mt-1 rounded-full ${
-                p.critical ? 'bg-red-600' : 'bg-teal-400'
-              }`}
-            />
-            <div>
-              <h2 className="font-semibold">{p.name}</h2>
-              <p className="text-sm">
-                Temperature: {p.temperature}°C, Oxygenation: {p.oxygenation}, Blood pressure: {p.pressure}
+            <div className="flex-1">
+              <h2 className="font-semibold text-lg">{patient.name}</h2>
+              <p className="text-sm opacity-90">
+                CPF: {patient.cpf} | Birth: {new Date(patient.dateOfBirth).toLocaleDateString()} | Sex: {patient.sex}
               </p>
             </div>
+            <div className="text-sm opacity-75">→</div>
           </div>
         ))}
       </div>

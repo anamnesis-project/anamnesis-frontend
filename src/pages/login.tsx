@@ -1,10 +1,69 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import imgHide1 from '../assets/olho.jpg'
 import imgLogo from '../assets/logo.jpg'
+import { getApiUrl } from '../config/api'
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const navigate = useNavigate()
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+
+    try { 
+      const response = await fetch(getApiUrl('/login'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        
+        // Tratamento de erro 422 (validação)
+        if (response.status === 422 && errorData.message) {
+          const validationErrors = Object.entries(errorData.message)
+            .map(([field, messages]) => {
+              const msgArray = messages as string[]
+              return `${field}:\n  - ${msgArray.join('\n  - ')}`
+            })
+            .join('\n\n')
+          throw new Error(validationErrors)
+        }
+        
+        throw new Error(errorData.message || `Error ${response.status}: Login failed`)
+      }
+
+      const data = await response.json()
+      
+      // Salvar token e employee no localStorage
+      localStorage.setItem('token', data.token)
+      localStorage.setItem('employee', JSON.stringify(data.employee))
+      
+      // Redirecionar para a lista de pacientes
+      navigate('/patients')
+    } catch (err: any) {
+      console.error('Login error:', err)
+      
+      // Tratamento especial para "Failed to fetch"
+      if (err.message === 'Failed to fetch' || err.name === 'TypeError') {
+        setError('Cannot connect to server. Please check:\n1. Backend is running on http://localhost:8080\n2. CORS is enabled on the backend\n3. No firewall/proxy blocking the connection')
+      } else {
+        setError(err.message || 'Failed to login. Please check your credentials.')
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-white flex items-center justify-center px-4">
@@ -24,18 +83,26 @@ export default function Login() {
           Join us to optimize the hospital care
         </p>
 
-        {/* Formulário */}
-        <form className="space-y-5">
-          {/* Nome completo */}
-        
+        {/* Mensagem de erro */}
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md whitespace-pre-line">
+            {error}
+          </div>
+        )}
 
+        {/* Formulário */}
+        <form className="space-y-5" onSubmit={handleSubmit}>
           {/* Email */}
           <div>
             <label className="block text-[#009fae] text-lg mb-1">Email:</label>
             <input
               type="email"
               placeholder="you@example.com"
-              className="w-full px-4 py-2 border-2 border-[#0077b1] rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-400"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              disabled={loading}
+              className="w-full px-4 py-2 border-2 border-[#0077b1] rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-400 disabled:opacity-50"
             />
           </div>
 
@@ -45,7 +112,11 @@ export default function Login() {
             <input
               type={showPassword ? 'text' : 'password'}
               placeholder="********"
-              className="w-full px-4 py-2 border-2 border-[#0077b1] rounded-md pr-10 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              disabled={loading}
+              className="w-full px-4 py-2 border-2 border-[#0077b1] rounded-md pr-10 focus:outline-none focus:ring-2 focus:ring-cyan-400 disabled:opacity-50"
             />
             <img
               src={imgHide1}
@@ -58,16 +129,17 @@ export default function Login() {
           {/* Botão */}
           <button
             type="submit"
-            className="w-full bg-[#0077b1] text-white py-3 rounded-md text-lg hover:bg-cyan-800 transition"
+            disabled={loading}
+            className="w-full bg-[#0077b1] text-white py-3 rounded-md text-lg hover:bg-cyan-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Login
+            {loading ? 'Loading...' : 'Login'}
           </button>
         </form>
 
-        {/* Link de login */}
+        {/* Link de registro */}
         <p className="text-center text-[#009fae] mt-6">
           Does not have an account?{' '}
-          <Link to="/login" className="underline text-[#0077b1] hover:text-cyan-800">
+          <Link to="/register" className="underline text-[#0077b1] hover:text-cyan-800">
              Register
           </Link>
         </p>

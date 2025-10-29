@@ -13,9 +13,9 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/patients" element={<PatientsList />} />
-        <Route path="/patients/:id" element={<PatientHistory />} />
+        <Route path="/patients/:id" element={<PatientInfo />} />
+        <Route path="/patients/:id/history" element={<PatientHistory />} />
         <Route path="/authorize-employees" element={<AuthorizeEmployees />} />
-        <Route path="/patient-info" element={<PatientInfo />} />
       </Routes>
     </BrowserRouter>
   )
