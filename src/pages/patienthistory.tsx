@@ -91,7 +91,7 @@ export default function PatientHistory() {
 
         {/* Título dinâmico com o nome do paciente */}
         <h1 className="text-xl font-semibold text-[#0077B1] text-center flex-1">
-          Patiente:{patientName}
+          Patient: {patientName}
         </h1>
 
         <div className="bg-[#0077B1] text-white w-8 h-8 flex items-center justify-center rounded-full font-bold">

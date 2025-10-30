@@ -160,7 +160,7 @@ export default function PatientInfo() {
         <div className="grid-column">
           <InfoCard label="Temperature" value={latestReport ? `${latestReport.temperature}°C` : 'N/A'} />
           <InfoCard label="Oxygenation" value={latestReport ? `${latestReport.oxygenSaturation}%` : 'N/A'} />
-          <InfoCard label="Blood pressure" value={latestReport ? `${latestReport.systolicPressure / 10}/${latestReport.diastolicPressure / 10}` : 'N/A'} />
+          <InfoCard label="Blood pressure" value={latestReport ? `${latestReport.systolicPressure}/${latestReport.diastolicPressure}` : 'N/A'} />
           <InfoCard label="Heart rate" value={latestReport ? `${latestReport.heartRate} bpm` : 'N/A'} />
         </div>
       </main>

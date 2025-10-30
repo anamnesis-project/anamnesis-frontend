@@ -1,5 +1,5 @@
 import React from 'react';
-import './InfoCard.css'; 
+import './infoCard.css'; 
 
 interface InfoCardProps {
   label: string;
