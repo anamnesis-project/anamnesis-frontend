@@ -165,7 +165,7 @@ async function fetchPatientHistory(id: string): Promise<FormattedHistory[] | und
         color: getUrgencyColor(urgency as Urgency), // Converte a string para o 'type Urgency'
         temperature: String(temperature),
         oxygen: `${oxygenSaturation}%`,
-        pressure: `${Math.trunc(systolicPressure / 10)} / ${Math.trunc(diastolicPressure/ 10)}`
+        pressure: `${Math.trunc(systolicPressure)} / ${Math.trunc(diastolicPressure)}`
       };
     });
 
