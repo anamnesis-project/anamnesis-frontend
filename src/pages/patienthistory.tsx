@@ -30,6 +30,7 @@ type Report = {
 };
 
 type FormattedHistory = {
+  id: number;
   date: string;
   color: string;
   temperature: string;
@@ -54,7 +55,8 @@ export default function PatientHistory() {
       const loadPatientName = async () => {
         try {
           const res = await fetch(getApiUrl(`/patients/${id}`), {
-            headers: { 'Authorization': `Bearer ${token}` }
+            headers: { 'Authorization': `Bearer ${token}`,
+          'ngrok-skip-browser-warning': 'true' }
           });
           if (!res.ok) throw new Error('Falha ao buscar paciente');
           const patientData: Patient = await res.json();
@@ -68,7 +70,7 @@ export default function PatientHistory() {
       // Função assíncrona para buscar o histórico de triagens
       const loadHistory = async () => {
         // Usa a função helper (abaixo) para buscar e formatar
-        const historyData = await fetchPatientHistory(id);
+        const historyData = await fetchPatientHistory(id, token);
         if (historyData) {
           setTriagens(historyData);
         }
@@ -109,14 +111,14 @@ export default function PatientHistory() {
               <div className="flex items-center gap-2">
                 {/* Cor da urgência */}
                 <span className={`w-3 h-3 rounded-full ${t.color}`} />
-                <span className="font-semibold">{t.date}</span>
+                <span className="font-semibold">{t.id}-{t.date}</span>
               </div>
               <p className="text-sm">
                 Temperature: {t.temperature}°C; Oxygenation: {t.oxygen}; Blood pressure {t.pressure}
               </p>
             </div>
             <button 
-              onClick={() => navigate(`/patients/${id}`)}
+              onClick={() => navigate(`/patients/${t.id}`)}
               className="bg-white text-[#0077B1] px-4 py-2 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
             >
               View
@@ -128,12 +130,14 @@ export default function PatientHistory() {
   )
 }
  
-async function fetchPatientHistory(id: string): Promise<FormattedHistory[] | undefined> {
+async function fetchPatientHistory(patientId: string, token: string): Promise<FormattedHistory[] | undefined> {
   try {
-    const response = await fetch(getApiUrl(`/patients/${id}/reports`), {
+    const response = await fetch(getApiUrl(`/patients/${patientId}/reports`), {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+        'ngrok-skip-browser-warning': 'true'
       }
     });
 
@@ -148,39 +152,35 @@ async function fetchPatientHistory(id: string): Promise<FormattedHistory[] | und
     // O 'response.json()' será automaticamente validado contra o 'type Report[]'
     const patientReports: Report[] = await response.json();
 
-    // Formata os dados brutos da API para o formato 'FormattedHistory'
-    const formattedHistory = patientReports.map(report => {
-      // Agora a desestruturação bate com o 'type Report' (snake_case)
-      const {
-        issuedAt,
-        urgency,
-        temperature,
-        oxygenSaturation,
-        systolicPressure,
-        diastolicPressure
-      } = report;
+    // Ordena o histórico por ID (do maior para o menor)
+    const sortedHistory = patientReports
+      .sort((a, b) => b.id - a.id) // Ordena por ID decrescente
+      .map(report => {
+        const {
+          id,
+          issuedAt,
+          urgency,
+          temperature,
+          oxygenSaturation,
+          systolicPressure,
+          diastolicPressure
+        } = report;
 
-      return {
-        date: formatDate(issuedAt),
-        color: getUrgencyColor(urgency as Urgency), // Converte a string para o 'type Urgency'
-        temperature: String(temperature),
-        oxygen: `${oxygenSaturation}%`,
-        pressure: `${Math.trunc(systolicPressure)} / ${Math.trunc(diastolicPressure)}`
-      };
-    });
+        return {
+          id,
+          date: formatDate(issuedAt),
+          color: getUrgencyColor(urgency as Urgency),
+          temperature: String(temperature),
+          oxygen: `${oxygenSaturation}%`,
+          pressure: `${Math.trunc(systolicPressure)} / ${Math.trunc(diastolicPressure)}`
+        };
+      });
 
-    // Ordena o histórico, do mais recente para o mais antigo
-    const sortedHistory = formattedHistory.sort((a, b) => {
-      const dateA = new Date(a.date.split('/').reverse().join('-'));
-      const dateB = new Date(b.date.split('/').reverse().join('-'));
-      return dateB.getTime() - dateA.getTime(); // b - a para ordem decrescente
-    });
-
-    console.log(`Histórico formatado para Paciente ${id}:`, sortedHistory);
+    console.log(`Histórico formatado para Paciente ${patientId}:`, sortedHistory);
     return sortedHistory;
 
   } catch (error) {
-    console.error(`Falha ao buscar histórico do paciente ${id}:`, error);
+    console.error(`Falha ao buscar histórico do paciente ${patientId}:`, error);
   }
 }
 

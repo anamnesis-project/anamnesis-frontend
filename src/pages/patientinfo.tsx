@@ -26,8 +26,10 @@ type Report = {
   oxygenSaturation: number;
   urgency: string;
   interview: Array<{ question: string; answer: string }>;
-  medications: Array<{ medication: string}>;
-  allergies: Array<{ allergy: string}>;
+  occupation: string;
+  medications: string[];
+  allergies: string[];
+  diseases: string[];
 };
 
 export default function PatientInfo() {
@@ -37,6 +39,7 @@ export default function PatientInfo() {
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [consultationLoading, setConsultationLoading] = useState(false);
 
   useEffect(() => {
     const fetchPatientData = async () => {
@@ -45,6 +48,7 @@ export default function PatientInfo() {
         return;
       }
 
+      console.log('Fetching data for patient ID:', id);
       setLoading(true);
       setError(null);
 
@@ -58,31 +62,46 @@ export default function PatientInfo() {
         const headers = {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
         };
 
-        // Buscar paciente e seus relatórios
-        const [patientRes, reportsRes] = await Promise.all([
-          fetch(getApiUrl(`/patients/${id}`), { headers }),
-          fetch(getApiUrl(`/patients/${id}/reports`), { headers }),
-        ]);
+        // Buscar apenas os relatórios do paciente
+        const reportsRes = await fetch(getApiUrl(`/reports/${id}`), { headers });
 
-        if (patientRes.status === 401 || reportsRes.status === 401) {
+        if (reportsRes.status === 401) {
           localStorage.removeItem('token');
           localStorage.removeItem('employee');
           navigate('/login');
           return;
         }
 
-        if (!patientRes.ok) {
-          throw new Error(`Failed to fetch patient: ${patientRes.status}`);
+        if (!reportsRes.ok) {
+          const text = await reportsRes.text();
+          console.error('Reports fetch failed:', {
+            status: reportsRes.status,
+            url: getApiUrl(`/patients/${id}/reports`),
+            response: text
+          });
+          throw new Error(`Failed to fetch reports: ${reportsRes.status}`);
         }
 
-        const patientData = await patientRes.json();
-        setPatient(patientData);
+        const reportsData = await reportsRes.json();
+        console.log('Reports fetched:', reportsData);
+        
+        // Se for um objeto único, converte para array
+        const reportsArray = Array.isArray(reportsData) ? reportsData : [reportsData];
+        
+        if (reportsArray.length === 0) {
+          setError('No reports found for this patient');
+          setLoading(false);
+          return;
+        }
+        
+        setReports(reportsArray);
 
-        if (reportsRes.ok) {
-          const reportsData = await reportsRes.json();
-          setReports(reportsData);
+        // Usar os dados do primeiro relatório
+        if (reportsArray.length > 0) {
+          setPatient(reportsArray[0].patient);
         }
       } catch (err: any) {
         console.error('Fetch error:', err);
@@ -94,6 +113,56 @@ export default function PatientInfo() {
 
     fetchPatientData();
   }, [id, navigate]);
+
+  // Função para iniciar consulta
+  const handleStartConsultation = async () => {
+    if (!latestReport) return;
+    
+    setConsultationLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      console.log('Token retrieved:', token ? 'exists' : 'missing');
+      
+      
+
+      const url = getApiUrl(`/reports/${latestReport.id}/consultation`);
+      console.log('Starting consultation for report:', latestReport.id, 'URL:', url);
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
+        }
+      });
+
+      console.log('Consultation response status:', response.status);
+
+      if (response.status === 401) {
+        console.log('401 Unauthorized - Token invalid');
+        localStorage.removeItem('token');
+        localStorage.removeItem('employee');
+        navigate('/login');
+        return;
+      }
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Response error:', errorText);
+        throw new Error(`Failed to start consultation: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('Consultation started:', data);
+      alert('Consultation started successfully!');
+    } catch (err: any) {
+      console.error('Error starting consultation:', err);
+      alert('Error starting consultation: ' + err.message);
+    } finally {
+      setConsultationLoading(false);
+    }
+  };
 
   // Calcular idade a partir da data de nascimento
   const calculateAge = (dateOfBirth: string) => {
@@ -138,13 +207,23 @@ export default function PatientInfo() {
         <h1 className="screen-title text-[#0077B1]">
           {patient.name} - {latestReport ? new Date(latestReport.issuedAt).toLocaleDateString() : 'No reports'}
         </h1>
-        <button className="avatar-button">A</button>
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={handleStartConsultation}
+            disabled={consultationLoading || !latestReport}
+            className="bg-[#0077B1] text-white px-4 py-2 rounded-lg font-semibold hover:bg-[#005a8c] disabled:opacity-50 disabled:cursor-not-allowed transition"
+          >
+            {consultationLoading ? 'Starting...' : 'Start Consultation'}
+          </button>
+          <button className="avatar-button">A</button>
+        </div>
       </header>
 
       <main className="content-grid">
         {/* Coluna 1 - Dados do Paciente */}
         <div className="grid-column">
           <InfoCard label="Name" value={patient.name} />
+          <InfoCard label="Occupation" value={latestReport ? latestReport.occupation : 'N/A'} />
           <InfoCard label="Age" value={calculateAge(patient.dateOfBirth).toString()} />
           <InfoCard label="Gender" value={patient.sex === 'M' ? 'Male' : 'Female'} />
           <InfoCard label="Weight" value={latestReport ? `${latestReport.weight} kg` : 'N/A'} />
@@ -180,13 +259,10 @@ export default function PatientInfo() {
               Medications
             </h2>
             <div className="space-y-4">
-              {latestReport.interview.map((item, index) => (
+              {latestReport.medications.map((medication, index) => (
                 <div key={index} className="bg-gradient-to-r from-blue-50 to-white rounded-lg p-4 border-l-4 border-[#0077B1] shadow-lg hover:shadow-xl transition-shadow">
-                  <p className="text-base font-semibold text-gray-800 mb-2">
-                    <span className="text-[#0077B1]">Q:</span> {item.question}
-                  </p>
-                  <p className="text-base text-gray-700 ml-6">
-                    <span className="text-[#0077B1] font-semibold">A:</span> {item.answer}
+                  <p className="text-base font-semibold text-gray-800">
+                    <span className="text-[#0077B1]">Medication:</span> {medication}
                   </p>
                 </div>
               ))}
@@ -205,10 +281,10 @@ export default function PatientInfo() {
               Allergies
             </h2>
             <div className="space-y-4">
-              {latestReport.allergies.map((item, index) => (
+              {latestReport.allergies.map((allergy, index) => (
                 <div key={index} className="bg-gradient-to-r from-blue-50 to-white rounded-lg p-4 border-l-4 border-[#0077B1] shadow-lg hover:shadow-xl transition-shadow">
-                  <p className="text-base font-semibold text-gray-800 mb-2">
-                    <span className="text-[#0077B1]">Allergy:</span> {item.allergy}
+                  <p className="text-base font-semibold text-gray-800">
+                    <span className="text-[#0077B1]">Allergy:</span> {allergy}
                   </p>
                 </div>
               ))}

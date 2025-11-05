@@ -5,6 +5,13 @@ import { getApiUrl } from '../config/api';
 type Employee = {
   id: number;
   name: string;
+  email: string;
+  cpf: string;
+  role: {
+    id: number;
+    name: string;
+    accessAllowed: boolean;
+  };
   [key: string]: any;
 };
 
@@ -39,6 +46,15 @@ export default function AuthorizeEmployees() {
         if (mounted) {
           setRoles(rolesData ?? []);
           setEmployees(employeesData ?? []);
+          
+          // Inicializar selectedRoles com os roles atuais dos employees
+          const initialRoles: Record<number, number> = {};
+          employeesData?.forEach((emp) => {
+            if (emp.role?.id) {
+              initialRoles[emp.id] = emp.role.id;
+            }
+          });
+          setSelectedRoles(initialRoles);
         }
       } catch (err: any) {
         console.error(err);
@@ -84,8 +100,8 @@ export default function AuthorizeEmployees() {
       const response = await fetch(getApiUrl(`/employees/${employeeId}`), {
         method: 'PATCH',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
         },
         body: JSON.stringify({ roleId }),
       });
@@ -101,8 +117,7 @@ export default function AuthorizeEmployees() {
       setShowSuccessModal(true);
       
       // Remover funcionário da lista
-      setEmployees(prev => prev.filter(e => e.id !== employeeId));
-      
+     
       // Fechar modal após 3 segundos
       setTimeout(() => {
         setShowSuccessModal(false);
@@ -194,6 +209,7 @@ async function getPendingEmployees(): Promise<Employee[]> {
   const token = localStorage.getItem('token') || undefined;
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
+      'ngrok-skip-browser-warning': 'true'
   }
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
@@ -217,6 +233,7 @@ async function getRoles(): Promise<Role[]> {
   const token = localStorage.getItem('token') || undefined;
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
+      'ngrok-skip-browser-warning': 'true'
   }
   if (token) headers["Authorization"] = `Bearer ${token}`;
 

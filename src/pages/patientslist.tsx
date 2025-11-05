@@ -6,10 +6,34 @@ import { getApiUrl } from '../config/api'
 
 type Patient = {
   id: number
-  name: string
-  cpf: string
-  dateOfBirth: string
-  sex: 'M' | 'F'
+  patient: {
+    id: number
+    name: string
+    cpf: string
+    dateOfBirth: string
+    sex: 'M' | 'F'
+  }
+  weight: number
+  height: number
+  heartRate: number
+  systolicPressure: number
+  diastolicPressure: number
+  temperature: number
+  oxygenSaturation: number
+  interview: Array<{
+    question: string
+    answer: string
+  }>
+  occupation: string
+  medications: string[]
+  allergies: string[]
+  diseases: string[]
+  issuedAt: string
+  urgency: string
+  consultation?: {
+    doctorId: number
+    consultationDate: string
+  }
 }
 
 export default function Patients() {
@@ -32,11 +56,12 @@ export default function Patients() {
           return
         }
 
-        const response = await fetch(getApiUrl('/patients'), {
+        const response = await fetch(getApiUrl('/reports'), {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+            'ngrok-skip-browser-warning': 'true'
           },
         })
 
@@ -49,11 +74,34 @@ export default function Patients() {
         }
 
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}))
-          throw new Error(errorData.message || `Error ${response.status}: Failed to fetch patients`)
+          const contentType = response.headers.get('content-type')
+          let errorMessage = `Error ${response.status}: Failed to fetch patients`
+          
+          if (contentType?.includes('application/json')) {
+            const errorData = await response.json()
+            errorMessage = errorData.message || errorMessage
+          } else {
+            const text = await response.text()
+            console.error('HTML Response received:', text)
+            errorMessage = `Server returned HTML (${response.status}). Check backend is running correctly.`
+          }
+          throw new Error(errorMessage)
+        }
+
+        const contentType = response.headers.get('content-type')
+        if (!contentType?.includes('application/json')) {
+          const text = await response.text()
+          console.error('❌ Unexpected response type:', {
+            contentType,
+            statusCode: response.status,
+            responseText: text.substring(0, 500),
+            fullUrl: getApiUrl('/reports')
+          })
+          throw new Error('Server returned non-JSON response. Check backend URL and CORS settings.')
         }
 
         const data = await response.json()
+        console.log('✅ Patients loaded:', data)
         setPatients(data)
       } catch (err: any) {
         console.error('Fetch patients error:', err)
@@ -71,9 +119,15 @@ export default function Patients() {
     fetchPatients()
   }, [navigate])
 
-  const filtered = patients.filter(p =>
-    p.name.toLowerCase().includes(search.toLowerCase())
-  )
+  // Filtrar apenas pacientes SEM consultation e remover duplicatas por patient.id
+  const filtered = patients
+    .filter(p => !p.consultation) // Sem consultation
+    .filter((p, index, self) => 
+      self.findIndex(item => item.patient.id === p.patient.id) === index // Remove duplicatas
+    )
+    .filter(p =>
+      p.patient.name.toLowerCase().includes(search.toLowerCase())
+    )
 
   return (
 
@@ -128,16 +182,17 @@ export default function Patients() {
         )}
 
         {/* Patient list */}
-        {!loading && !error && filtered.map((patient) => (
+        {!loading && !error && filtered.map((report) => (
           <div
-            key={patient.id}
-            onClick={() => navigate(`/patients/${patient.id}/history`)}
+            key={report.id}
+            onClick={() => navigate(`/patients/${report.patient.id}/history`)}
             className="flex items-start bg-[#0077B1] text-white p-4 rounded-lg shadow-sm gap-3 cursor-pointer hover:bg-[#005a8c] transition"
           >
             <div className="flex-1">
-              <h2 className="font-semibold text-lg">{patient.name}</h2>
+              <h2 className="font-semibold text-lg">{report.patient.id}-{report.patient.name}</h2>
               <p className="text-sm opacity-90">
-                CPF: {patient.cpf} | Birth: {new Date(patient.dateOfBirth).toLocaleDateString()} | Sex: {patient.sex}
+                Birth: {new Date(report.patient.dateOfBirth).toLocaleDateString()} | Sex: {report.patient.sex} |
+                Temperature: {report.temperature}°C | Oxygenation: {report.oxygenSaturation}% | Blood pressure: {report.systolicPressure}/{report.diastolicPressure}
               </p>
             </div>
             <div className="text-sm opacity-75">→</div>
