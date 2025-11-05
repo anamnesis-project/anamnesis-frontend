@@ -6,7 +6,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:8080',
+        target: 'https://kickless-untaxing-neil.ngrok-free.dev/',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },

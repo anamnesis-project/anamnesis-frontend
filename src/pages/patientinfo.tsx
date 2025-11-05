@@ -26,6 +26,8 @@ type Report = {
   oxygenSaturation: number;
   urgency: string;
   interview: Array<{ question: string; answer: string }>;
+  medications: Array<{ medication: string}>;
+  allergies: Array<{ allergy: string}>;
 };
 
 export default function PatientInfo() {
@@ -165,7 +167,57 @@ export default function PatientInfo() {
         </div>
       </main>
 
-      {/* Interview Section */}
+      
+
+      {/* Medications Section */}
+      {latestReport?.medications && latestReport.medications.length > 0 && (
+        <div className="max-w-6xl mx-auto px-8 pb-8">
+          <div className="bg-gray-50 rounded-xl shadow-2xl border mt-8 border-gray-200 p-6">
+            <h2 className="text-2xl font-bold text-[#0077B1] mb-6 flex items-center gap-2">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+              </svg>
+              Medications
+            </h2>
+            <div className="space-y-4">
+              {latestReport.interview.map((item, index) => (
+                <div key={index} className="bg-gradient-to-r from-blue-50 to-white rounded-lg p-4 border-l-4 border-[#0077B1] shadow-lg hover:shadow-xl transition-shadow">
+                  <p className="text-base font-semibold text-gray-800 mb-2">
+                    <span className="text-[#0077B1]">Q:</span> {item.question}
+                  </p>
+                  <p className="text-base text-gray-700 ml-6">
+                    <span className="text-[#0077B1] font-semibold">A:</span> {item.answer}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {latestReport?.allergies && latestReport.allergies.length > 0 && (
+        <div className="max-w-6xl mx-auto px-8 pb-8">
+          <div className="bg-gray-50 rounded-xl shadow-2xl border mt-8 border-gray-200 p-6">
+            <h2 className="text-2xl font-bold text-[#0077B1] mb-6 flex items-center gap-2">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+              </svg>
+              Allergies
+            </h2>
+            <div className="space-y-4">
+              {latestReport.allergies.map((item, index) => (
+                <div key={index} className="bg-gradient-to-r from-blue-50 to-white rounded-lg p-4 border-l-4 border-[#0077B1] shadow-lg hover:shadow-xl transition-shadow">
+                  <p className="text-base font-semibold text-gray-800 mb-2">
+                    <span className="text-[#0077B1]">Allergy:</span> {item.allergy}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+
       {latestReport?.interview && latestReport.interview.length > 0 && (
         <div className="max-w-6xl mx-auto px-8 pb-8">
           <div className="bg-gray-50 rounded-xl shadow-2xl border mt-8 border-gray-200 p-6">
