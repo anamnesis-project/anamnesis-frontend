@@ -164,6 +164,64 @@ export default function PatientInfo() {
     }
   };
 
+  const handlePDFReport = async () => {
+    if (!latestReport) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      console.log('Token retrieved:', token ? 'exists' : 'missing');
+
+      const url = getApiUrl(`/reports/${latestReport.id}/pdf`);
+      console.log('Fetching PDF from:', url);
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'ngrok-skip-browser-warning': 'true'
+        }
+      });
+
+      console.log('PDF response status:', response.status);
+
+      if (response.status === 401) {
+        console.log('401 Unauthorized - Token invalid');
+        localStorage.removeItem('token');
+        localStorage.removeItem('employee');
+        navigate('/login');
+        return;
+      }
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Response error:', errorText);
+        throw new Error(`Failed to get PDF: ${response.status}`);
+      }
+
+      // Converter a resposta em Blob (arquivo binário)
+      const blob = await response.blob();
+      
+      // Criar uma URL do blob
+      const blobUrl = window.URL.createObjectURL(blob);
+      
+      // Criar um link temporário e clicar para download
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = `report_${latestReport.id}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      
+      // Limpar recursos
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+      
+      console.log('PDF downloaded successfully');
+    } catch (err: any) {
+      console.error('Error downloading PDF:', err);
+      alert('Error downloading PDF: ' + err.message);
+    }
+  };
+
   // Calcular idade a partir da data de nascimento
   const calculateAge = (dateOfBirth: string) => {
     const birth = new Date(dateOfBirth);
@@ -214,6 +272,14 @@ export default function PatientInfo() {
             className="bg-[#0077B1] text-white px-4 py-2 rounded-lg font-semibold hover:bg-[#005a8c] disabled:opacity-50 disabled:cursor-not-allowed transition"
           >
             {consultationLoading ? 'Starting...' : 'Start Consultation'}
+          </button>
+
+          <button 
+            onClick={handlePDFReport}
+            disabled={!latestReport}
+            className="bg-red-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+          >
+            📄 Download PDF
           </button>
           <button className="avatar-button">A</button>
         </div>

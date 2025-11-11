@@ -1,18 +1,18 @@
-/* InfoCard.css */
+
 .info-card {
-  background-color: #5A8F97; /* Um azul-petróleo similar ao da imagem */
+  background-color: #5A8F97; 
   color: white;
   padding: 16px;
-  border-radius: 12px; /* Cantos arredondados */
-  margin-bottom: 16px; /* Espaço entre os cartões na mesma coluna */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra leve */
+  border-radius: 12px; 
+  margin-bottom: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
 }
 
 .card-label {
-  display: block; /* Faz o label ficar numa linha própria */
+  display: block; 
   font-size: 14px;
   font-weight: bold;
-  opacity: 0.9; /* Torna o label ligeiramente mais suave */
+  opacity: 0.9; 
   margin-bottom: 4px;
 }
 

@@ -191,7 +191,7 @@ export default function AuthorizeEmployees() {
                 ))}
               </select>
               <button
-                className="bg-teal-400 hover:bg-teal-500 text-white px-4 py-1 rounded disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                className="bg-green-500 hover:bg-green-600 text-white px-4 py-1 rounded disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                 onClick={() => handleAssignRole(employee.id)}
                 disabled={processingId === employee.id || !selectedRoles[employee.id]}
               >
