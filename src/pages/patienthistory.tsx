@@ -114,7 +114,7 @@ export default function PatientHistory() {
                 <span className="font-semibold">{t.id}-{t.date}</span>
               </div>
               <p className="text-sm">
-                Temperature: {t.temperature}°C; Oxygenation: {t.oxygen}; Blood pressure {t.pressure}
+                Temperature: {t.temperature}°C | Oxygenation: {t.oxygen} | Blood pressure: {t.pressure}
               </p>
             </div>
             <button 
@@ -170,9 +170,9 @@ async function fetchPatientHistory(patientId: string, token: string): Promise<Fo
           id,
           date: formatDate(issuedAt),
           color: getUrgencyColor(urgency as Urgency),
-          temperature: String(temperature),
-          oxygen: `${oxygenSaturation}%`,
-          pressure: `${Math.trunc(systolicPressure)} / ${Math.trunc(diastolicPressure)}`
+          temperature: temperature ? String(temperature) : "N/A",
+          oxygen: oxygenSaturation ? `${oxygenSaturation}%` : "N/A",
+          pressure: systolicPressure && diastolicPressure ? `${Math.trunc(systolicPressure)} / ${Math.trunc(diastolicPressure)}` : "N/A"
         };
       });
 

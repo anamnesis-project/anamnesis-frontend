@@ -191,8 +191,11 @@ export default function Patients() {
             <div className="flex-1">
               <h2 className="font-semibold text-lg">{report.patient.id}-{report.patient.name}</h2>
               <p className="text-sm opacity-90">
-                Birth: {new Date(report.patient.dateOfBirth).toLocaleDateString()} | Sex: {report.patient.sex} |
-                Temperature: {report.temperature}°C | Oxygenation: {report.oxygenSaturation}% | Blood pressure: {report.systolicPressure}/{report.diastolicPressure}
+                Birth: { report.patient.dateOfBirth ? new Date(report.patient.dateOfBirth).toLocaleDateString() : "N/A" } |
+                Sex: { report.patient.sex ? report.patient.sex : "N/A"} |
+                Temperature: { report.temperature ? `${report.temperature} °C` : "N/A" } |
+                Oxygenation: { report.oxygenSaturation ? `${report.oxygenSaturation} %` : "N/A" } |
+                Blood pressure: { report.systolicPressure && report.diastolicPressure ? `${report.systolicPressure}/${report.diastolicPressure}` : "N/A" } 
               </p>
             </div>
             <div className="text-sm opacity-75">→</div>
