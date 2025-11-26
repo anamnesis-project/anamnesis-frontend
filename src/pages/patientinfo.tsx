@@ -266,6 +266,7 @@ export default function PatientInfo() {
           {patient.name} - {latestReport ? new Date(latestReport.issuedAt).toLocaleDateString() : 'No reports'}
         </h1>
         <div className="flex items-center gap-4">
+        {/*
           <button 
             onClick={handleStartConsultation}
             disabled={consultationLoading || !latestReport}
@@ -273,7 +274,7 @@ export default function PatientInfo() {
           >
             {consultationLoading ? 'Starting...' : 'Start Consultation'}
           </button>
-
+        */}
           <button 
             onClick={handlePDFReport}
             disabled={!latestReport}
@@ -289,26 +290,26 @@ export default function PatientInfo() {
         {/* Coluna 1 - Dados do Paciente */}
         <div className="grid-column">
           <InfoCard label="Name" value={patient.name} />
-          <InfoCard label="Occupation" value={latestReport ? latestReport.occupation : 'N/A'} />
-          <InfoCard label="Age" value={calculateAge(patient.dateOfBirth).toString()} />
-          <InfoCard label="Gender" value={patient.sex === 'M' ? 'Male' : 'Female'} />
-          <InfoCard label="Weight" value={latestReport ? `${latestReport.weight} kg` : 'N/A'} />
+          <InfoCard label="Occupation" value={latestReport ? latestReport.occupation ? latestReport.occupation : "N/A" : 'N/A'} />
+          <InfoCard label="Age" value={ patient.dateOfBirth ? calculateAge(patient.dateOfBirth).toString() : "N/A" } />
+          <InfoCard label="Gender" value={ patient.sex ? patient.sex === 'M' ? 'Male' : 'Female' : "N/A" } />
         </div>
 
         {/* Coluna 2 - Informações da Entrevista */}
         <div className="grid-column">
           <InfoCard label="CPF" value={patient.cpf} />
-          <InfoCard label="Birth Date" value={new Date(patient.dateOfBirth).toLocaleDateString()} />
-          <InfoCard label="Height" value={latestReport ? `${latestReport.height} cm` : 'N/A'} />
-          <InfoCard label="Urgency" value={latestReport?.urgency || 'undefined'} />
+          <InfoCard label="Birth Date" value={patient.dateOfBirth ? new Date(patient.dateOfBirth).toLocaleDateString() : "N/A"} />
+          <InfoCard label="Height" value={latestReport && latestReport.height ? `${latestReport.height} cm` : 'N/A'} />
+          <InfoCard label="Weight" value={latestReport && latestReport.weight ? `${latestReport.weight} kg` : 'N/A'} />
+          {/* <InfoCard label="Urgency" value={latestReport?.urgency || 'undefined'} /> */}
         </div>
 
         {/* Coluna 3 - Sinais Vitais */}
         <div className="grid-column">
-          <InfoCard label="Temperature" value={latestReport ? `${latestReport.temperature}°C` : 'N/A'} />
-          <InfoCard label="Oxygenation" value={latestReport ? `${latestReport.oxygenSaturation}%` : 'N/A'} />
-          <InfoCard label="Blood pressure" value={latestReport ? `${latestReport.systolicPressure}/${latestReport.diastolicPressure}` : 'N/A'} />
-          <InfoCard label="Heart rate" value={latestReport ? `${latestReport.heartRate} bpm` : 'N/A'} />
+          <InfoCard label="Temperature" value={latestReport && latestReport.temperature ? `${latestReport.temperature}°C` : 'N/A'} />
+          <InfoCard label="Oxygenation" value={latestReport && latestReport.oxygenSaturation ? `${latestReport.oxygenSaturation}%` : 'N/A'} />
+          <InfoCard label="Blood pressure" value={latestReport && latestReport.diastolicPressure && latestReport.systolicPressure ? `${latestReport.systolicPressure}/${latestReport.diastolicPressure}` : 'N/A'} />
+          <InfoCard label="Heart rate" value={latestReport && latestReport.heartRate ? `${latestReport.heartRate} bpm` : 'N/A'} />
         </div>
       </main>
 
@@ -359,6 +360,27 @@ export default function PatientInfo() {
         </div>
       )}
 
+      {latestReport?.diseases && latestReport.diseases.length > 0 && (
+        <div className="max-w-6xl mx-auto px-8 pb-8">
+          <div className="bg-gray-50 rounded-xl shadow-2xl border mt-8 border-gray-200 p-6">
+            <h2 className="text-2xl font-bold text-[#0077B1] mb-6 flex items-center gap-2">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+              </svg>
+              Diseases
+            </h2>
+            <div className="space-y-4">
+              {latestReport.diseases.map((disease, index) => (
+                <div key={index} className="bg-gradient-to-r from-blue-50 to-white rounded-lg p-4 border-l-4 border-[#0077B1] shadow-lg hover:shadow-xl transition-shadow">
+                  <p className="text-base font-semibold text-gray-800">
+                    <span className="text-[#0077B1]">Disease:</span> {disease}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {latestReport?.interview && latestReport.interview.length > 0 && (
         <div className="max-w-6xl mx-auto px-8 pb-8">
