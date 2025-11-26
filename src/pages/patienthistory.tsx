@@ -49,7 +49,7 @@ export default function PatientHistory() {
   // Efeito para buscar os dados quando o 'id' do paciente mudar
   useEffect(() => {
     if (id) {
-      const token = localStorage.getItem('authToken') || '';
+      const token = localStorage.getItem('token') || '';
 
       // Função assíncrona para buscar o nome do paciente
       const loadPatientName = async () => {
